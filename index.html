@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dom Fama — Relatório Gerencial WBuy</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f4f4f0;--card:#fff;--text:#171717;--muted:#666;--line:#e6e6e6;--accent:#4b0707;--accent2:#780b0b;--green:#1f8a70;--red:#c62828}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+.topbar{background:var(--accent);color:#fff;text-align:center;padding:12px;font-weight:800;font-size:13px}
+header{background:#fff;padding:24px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:18px}
+.brand{display:flex;align-items:center;gap:16px}
+.logo-img{width:82px;height:82px;border-radius:50%;object-fit:contain;background:#fff;border:1px solid #ddd;padding:4px}
+h1{font-size:20px;color:var(--accent)}.sub{font-size:13px;color:var(--muted);margin-top:3px}
+.btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:12px 16px;font-weight:800;cursor:pointer;font-family:inherit}
+.btn:hover{background:var(--accent2)}.btn.secondary{background:#fff;color:var(--accent);border:1px solid #ccc}.btn.green{background:var(--green)}.btn:disabled{opacity:.55;cursor:not-allowed}
+main{max-width:1180px;margin:24px auto;padding:0 18px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px;box-shadow:0 2px 10px rgba(0,0,0,.03)}
+.login{max-width:420px;margin:60px auto}.hidden{display:none!important}
+label{display:block;font-size:13px;font-weight:700;color:#444;margin-bottom:6px}input,select{width:100%;padding:11px 12px;border:1px solid #d9d9d9;border-radius:9px;font:inherit;background:#fff}input:focus{outline:2px solid var(--accent);border-color:transparent}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}@media(max-width:760px){.grid2,.grid4{grid-template-columns:1fr}header{flex-direction:column;align-items:flex-start}}
+.kpi{border-top:4px solid var(--accent);text-align:center}.kpi h4{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#777}.kpi p{font-size:24px;font-weight:900;margin-top:8px}
+.msg{padding:12px 14px;border-radius:9px;margin:12px 0;font-size:13px}.ok{background:#e8f5e9;color:#2d7d46;border:1px solid #c8e6c9}.err{background:#ffebee;color:var(--red);border:1px solid #ffcdd2}.info{background:#eef5ff;color:#174b82;border:1px solid #cfe3ff}
+.progress{height:28px;background:#eee;border-radius:20px;overflow:hidden;border:1px solid #ddd}.bar{height:100%;width:0;background:var(--green);transition:.25s}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}th,td{padding:10px;border-bottom:1px solid #eee;text-align:right}th:first-child,td:first-child,th:nth-child(2),td:nth-child(2),th:nth-child(3),td:nth-child(3){text-align:left}th{background:#fafafa;color:#555}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.note{font-size:12px;color:#777;margin-top:7px;line-height:1.45}
+@media print{.topbar,header .btn,.no-print,.actions,#configCard,#uploadCard{display:none!important}body{background:#fff}main{max-width:100%;margin:0;padding:0}.card{box-shadow:none;border:1px solid #ccc}}
+</style>
+</head>
+<body>
+<div class="topbar">Empório Dom Fama • Relatório Gerencial WBuy</div>
+<header>
+  <div class="brand">
+    <img class="logo-img" src="assets/dom-fama-logo.jpeg" alt="Empório Dom Fama">
+    <div>
+      <h1>Fechamento Financeiro</h1>
+      <div class="sub">Relatório Rápido e Prático</div>
+    </div>
+  </div>
+  <button class="btn secondary hidden" id="logoutBtn" onclick="logout()">Sair</button>
+</header>
+
+<main>
+<section class="card login" id="loginPage">
+  <h2 style="font-size:18px;margin-bottom:6px;color:var(--accent)">Área restrita</h2>
+  <p class="sub" style="margin-bottom:18px">Acesse para processar relatórios financeiros.</p>
+  <div id="loginMsg"></div>
+  <label>Usuário</label>
+  <input id="usuario" autocomplete="username" placeholder="admin">
+  <div style="height:12px"></div>
+  <label>Senha</label>
+  <input id="senha" type="password" autocomplete="current-password" placeholder="senha" onkeydown="if(event.key==='Enter')login()">
+  <button class="btn" style="width:100%;margin-top:16px" onclick="login()">Entrar</button>
+</section>
+
+<section id="appPage" class="hidden">
+  <div class="card" id="configCard">
+    <h2 style="font-size:18px;color:var(--accent)">1. Período</h2>
+    <div class="grid2" style="margin-top:14px">
+      <div><label>Data início</label><input type="date" id="inicio"></div>
+      <div><label>Data fim</label><input type="date" id="fim"></div>
+    </div>
+    <p class="note">A URL do n8n e a autorização WBuy já ficam configuradas no código. O usuário não precisa preencher isso na tela.</p>
+  </div>
+
+  <div class="card" id="uploadCard">
+    <h2 style="font-size:18px;color:var(--accent)">2. Planilha de pedidos</h2>
+    <input type="file" id="planilha" accept=".xlsx,.xls,.csv">
+    <p class="note">A planilha precisa ter coluna <b>id</b>, <b>pedido</b>, <b>codigo</b>, <b>código</b>, <b>order_id</b> ou <b>numero</b>.</p>
+    <div class="actions">
+      <button class="btn green" onclick="processar()">Processar relatório</button>
+      <button class="btn secondary" onclick="exportarCSV()" id="csvBtn" disabled>Baixar CSV</button>
+      <button class="btn secondary" onclick="window.print()" id="pdfBtn" disabled>Imprimir/PDF</button>
+    </div>
+    <div id="processMsg"></div>
+    <div class="progress hidden" id="progressWrap"><div class="bar" id="bar"></div></div>
+  </div>
+
+  <div id="resultado" class="hidden">
+    <div class="grid4">
+      <div class="card kpi"><h4>Faturamento</h4><p id="kpiFat">R$ 0,00</p></div>
+      <div class="card kpi"><h4>Lucro estimado</h4><p id="kpiLucro">R$ 0,00</p></div>
+      <div class="card kpi"><h4>Pedidos válidos</h4><p id="kpiValidos">0</p></div>
+      <div class="card kpi"><h4>Ticket médio</h4><p id="kpiTicket">R$ 0,00</p></div>
+    </div>
+    <div class="card">
+      <h2 style="font-size:18px;color:var(--accent)">Faturamento por canal</h2>
+      <div class="grid4" style="margin-top:12px">
+        <div class="card kpi"><h4>Shopee</h4><p id="canShopee">R$ 0,00</p></div>
+        <div class="card kpi"><h4>Mercado Livre</h4><p id="canML">R$ 0,00</p></div>
+        <div class="card kpi"><h4>Site / Loja</h4><p id="canLoja">R$ 0,00</p></div>
+        <div class="card kpi"><h4>Margem média</h4><p id="kpiMargem">0%</p></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2 style="font-size:18px;color:var(--accent)">Pedidos</h2>
+      <div style="overflow:auto"><table id="tbl"><thead><tr><th>Pedido</th><th>Canal</th><th>Status</th><th>Valor</th><th>Frete</th><th>Taxa</th><th>Custo</th><th>Lucro</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<script>
+const API_BASE = "https://emporio-chat-n8n.fn9pf1.easypanel.host/webhook";
+const TOKEN_WBUY_PADRAO = "MjlkNzFiMzEtNWJiYS00YzZjLWE5ZjItNjRiZmYxODMzYjVmOjQ2NTgyZWRkOTg2YTRmYTM4MDAzN2QxMmI1Y2U1NWE4";
+
+let relatorioAtual = null;
+const BRL = v => Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const PCT = v => (Number(v||0)*100).toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';
+
+function msg(id, text, cls){ document.getElementById(id).innerHTML = text ? `<div class="msg ${cls}">${text}</div>` : ''; }
+function api(path){ return API_BASE.replace(/\/$/,'') + path; }
+
+(function init(){
+  const hoje = new Date();
+  document.getElementById('fim').value = hoje.toISOString().slice(0,10);
+  const ini = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+  document.getElementById('inicio').value = ini.toISOString().slice(0,10);
+  if(localStorage.getItem('domfamaToken')) showApp();
+})();
+
+function showApp(){
+  document.getElementById('loginPage').classList.add('hidden');
+  document.getElementById('appPage').classList.remove('hidden');
+  document.getElementById('logoutBtn').classList.remove('hidden');
+}
+
+function logout(){
+  localStorage.removeItem('domfamaToken');
+  location.reload();
+}
+
+async function login(){
+  const usuario = document.getElementById('usuario').value.trim();
+  const senha = document.getElementById('senha').value;
+  msg('loginMsg','Verificando acesso...','info');
+
+  try{
+    const r = await fetch(api('/domfama-login'), {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({usuario, senha})
+    });
+    const d = await r.json();
+    if(!d.ok) throw new Error(d.message || 'Login recusado.');
+    localStorage.setItem('domfamaToken', d.token);
+    msg('loginMsg','','');
+    showApp();
+  }catch(e){
+    msg('loginMsg', e.message || 'Erro no login.', 'err');
+  }
+}
+
+async function lerPlanilha(){
+  const file = document.getElementById('planilha').files[0];
+  if(!file) throw new Error('Selecione uma planilha.');
+
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, {type:'array'});
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, {defval:''});
+  const ids = [];
+
+  for(const r of rows){
+    const key = Object.keys(r).find(k =>
+      ['id','pedido','codigo','código','order_id','numero','número'].includes(String(k).toLowerCase().trim())
+    );
+    if(key && r[key]) ids.push(String(r[key]).trim());
+  }
+
+  return [...new Set(ids)];
+}
+
+async function processar(){
+  const token = localStorage.getItem('domfamaToken');
+
+  try{
+    const ids = await lerPlanilha();
+    if(!ids.length) throw new Error('Não encontrei coluna de ID/pedido/código na planilha.');
+
+    document.getElementById('progressWrap').classList.remove('hidden');
+    document.getElementById('bar').style.width = '25%';
+    msg('processMsg', `Enviando ${ids.length} pedidos para processamento. Aguarde.`, 'info');
+
+    const r = await fetch(api('/domfama-processar-wbuy'), {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+token
+      },
+      body:JSON.stringify({
+        ids,
+        inicio:document.getElementById('inicio').value,
+        fim:document.getElementById('fim').value,
+        token_wbuy:TOKEN_WBUY_PADRAO
+      })
+    });
+
+    document.getElementById('bar').style.width = '100%';
+    const d = await r.json();
+
+    if(!d.ok) throw new Error(d.message || 'Erro ao processar.');
+
+    relatorioAtual = d;
+    render(d);
+    msg('processMsg', 'Relatório processado com sucesso.', 'ok');
+  }catch(e){
+    msg('processMsg', e.message || 'Erro no processamento.', 'err');
+    document.getElementById('bar').style.width = '0%';
+  }
+}
+
+function render(d){
+  document.getElementById('resultado').classList.remove('hidden');
+  document.getElementById('csvBtn').disabled = false;
+  document.getElementById('pdfBtn').disabled = false;
+
+  document.getElementById('kpiFat').textContent = BRL(d.faturamento);
+  document.getElementById('kpiLucro').textContent = BRL(d.lucro);
+  document.getElementById('kpiValidos').textContent = d.qtd_pedidos_validos || 0;
+  document.getElementById('kpiTicket').textContent = BRL(d.ticket_medio);
+  document.getElementById('kpiMargem').textContent = PCT(d.margem_media);
+  document.getElementById('canShopee').textContent = BRL(d.canais?.Shopee);
+  document.getElementById('canML').textContent = BRL(d.canais?.['Mercado Livre']);
+  document.getElementById('canLoja').textContent = BRL(d.canais?.Loja);
+
+  const tb = document.querySelector('#tbl tbody');
+  tb.innerHTML = (d.pedidos || []).map(p => `<tr>
+    <td>${escapeHtml(p.pedido_id)}</td>
+    <td>${escapeHtml(p.canal)}</td>
+    <td>${escapeHtml(p.status || p.status_id)}</td>
+    <td>${BRL(p.valor)}</td>
+    <td>${BRL(p.frete)}</td>
+    <td>${BRL(p.taxa)}</td>
+    <td>${BRL(p.custo_produtos)}</td>
+    <td>${BRL(p.lucro)}</td>
+  </tr>`).join('');
+}
+
+function escapeHtml(s){
+  return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function exportarCSV(){
+  if(!relatorioAtual) return;
+  const rows = relatorioAtual.pedidos || [];
+  const header = ['pedido_id','canal','status','status_id','valido','valor','frete','taxa','custo_produtos','lucro','margem'];
+  const csv = [header.join(';')]
+    .concat(rows.map(r => header.map(h => String(r[h]??'').replace(/;/g,',')).join(';')))
+    .join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'relatorio-dom-fama.csv';
+  a.click();
+}
+</script>
+</body>
+</html>
