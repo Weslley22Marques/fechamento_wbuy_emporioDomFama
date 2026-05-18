@@ -6,7 +6,7 @@
 <title>Dom Fama — Relatório Gerencial WBuy</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
-:root{--bg:#f4f4f0;--card:#fff;--text:#171717;--muted:#666;--line:#e6e6e6;--accent:#4b0707;--accent2:#780b0b;--green:#1f8a70;--red:#c62828}
+:root{--bg:#f4f4f0;--card:#fff;--text:#171717;--muted:#666;--line:#e6e6e6;--accent:#4b0707;--accent2:#780b0b;--green:#1f8a70;--red:#c62828;--blue:#0056b3;--orange:#ee4d2d;--yellow:#ffe600;--dark:#343a40}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
 .topbar{background:var(--accent);color:#fff;text-align:center;padding:12px;font-weight:800;font-size:13px}
@@ -15,17 +15,20 @@ header{background:#fff;padding:24px 22px;border-bottom:1px solid var(--line);dis
 .logo-img{width:82px;height:82px;border-radius:50%;object-fit:contain;background:#fff;border:1px solid #ddd;padding:4px}
 h1{font-size:20px;color:var(--accent)}.sub{font-size:13px;color:var(--muted);margin-top:3px}
 .btn{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:12px 16px;font-weight:800;cursor:pointer;font-family:inherit}
-.btn:hover{background:var(--accent2)}.btn.secondary{background:#fff;color:var(--accent);border:1px solid #ccc}.btn.green{background:var(--green)}.btn:disabled{opacity:.55;cursor:not-allowed}
+.btn:hover{background:var(--accent2)}.btn.secondary{background:#fff;color:var(--accent);border:1px solid #ccc}.btn.green{background:var(--green)}.btn.blue{background:var(--blue)}.btn.dark{background:var(--dark)}.btn:disabled{opacity:.55;cursor:not-allowed}
 main{max-width:1180px;margin:24px auto;padding:0 18px}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:18px;box-shadow:0 2px 10px rgba(0,0,0,.03)}
 .login{max-width:420px;margin:60px auto}.hidden{display:none!important}
 label{display:block;font-size:13px;font-weight:700;color:#444;margin-bottom:6px}input,select{width:100%;padding:11px 12px;border:1px solid #d9d9d9;border-radius:9px;font:inherit;background:#fff}input:focus{outline:2px solid var(--accent);border-color:transparent}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}@media(max-width:760px){.grid2,.grid4{grid-template-columns:1fr}header{flex-direction:column;align-items:flex-start}}
-.kpi{border-top:4px solid var(--accent);text-align:center}.kpi h4{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#777}.kpi p{font-size:24px;font-weight:900;margin-top:8px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}@media(max-width:760px){.grid2,.grid3,.grid4{grid-template-columns:1fr}header{flex-direction:column;align-items:flex-start}}
+.kpi{border-top:4px solid var(--accent);text-align:center}.kpi h4{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#777}.kpi p{font-size:23px;font-weight:900;margin-top:8px}
 .msg{padding:12px 14px;border-radius:9px;margin:12px 0;font-size:13px}.ok{background:#e8f5e9;color:#2d7d46;border:1px solid #c8e6c9}.err{background:#ffebee;color:var(--red);border:1px solid #ffcdd2}.info{background:#eef5ff;color:#174b82;border:1px solid #cfe3ff}
-.progress{height:28px;background:#eee;border-radius:20px;overflow:hidden;border:1px solid #ddd}.bar{height:100%;width:0;background:var(--green);transition:.25s}
+.progress{height:34px;background:#eee;border-radius:20px;overflow:hidden;border:1px solid #ddd;margin-top:10px}.bar{height:100%;width:0;background:var(--green);transition:.25s}
+.progress-meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;color:#555;margin-top:10px}
 table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}th,td{padding:10px;border-bottom:1px solid #eee;text-align:right}th:first-child,td:first-child,th:nth-child(2),td:nth-child(2),th:nth-child(3),td:nth-child(3){text-align:left}th{background:#fafafa;color:#555}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.note{font-size:12px;color:#777;margin-top:7px;line-height:1.45}
-@media print{.topbar,header .btn,.no-print,.actions,#configCard,#uploadCard{display:none!important}body{background:#fff}main{max-width:100%;margin:0;padding:0}.card{box-shadow:none;border:1px solid #ccc}}
+.section-title{margin-top:28px;border-bottom:1px solid #eee;padding-bottom:8px;color:#343a40;font-size:16px;text-transform:uppercase;letter-spacing:.5px}
+.platform-title{color:#495057;font-size:14px;margin-bottom:5px;margin-top:22px;font-weight:bold;border-left:3px solid var(--blue);padding-left:8px}
+@media print{.topbar,header .btn,.no-print,.actions,#configCard,#uploadCard,#progressBox{display:none!important}body{background:#fff}main{max-width:100%;margin:0;padding:0}.card{box-shadow:none;border:1px solid #ccc;page-break-inside:avoid}table{border:1px solid #ccc}tr{page-break-inside:avoid}th,td{border:1px solid #ccc;color:#000;padding:8px}.page-break{page-break-before:always}}
 </style>
 </head>
 <body>
@@ -35,7 +38,7 @@ table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}th,td{p
     <img class="logo-img" src="assets/dom-fama-logo.jpeg" alt="Empório Dom Fama">
     <div>
       <h1>Fechamento Financeiro</h1>
-      <div class="sub">Upload da planilha de pedidos + consulta automática na WBuy</div>
+      <div class="sub">Consulta WBuy por lotes com relatório de vendas, frete, clientes e produtos</div>
     </div>
   </div>
   <button class="btn secondary hidden" id="logoutBtn" onclick="logout()">Sair</button>
@@ -61,7 +64,7 @@ table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}th,td{p
       <div><label>Data início</label><input type="date" id="inicio"></div>
       <div><label>Data fim</label><input type="date" id="fim"></div>
     </div>
-    <p class="note">A URL do n8n e a autorização WBuy já ficam configuradas no código. O usuário não precisa preencher isso na tela.</p>
+    <p class="note">O site chama <b>/api</b>. O token WBuy deve ficar apenas no n8n. O processamento usa lotes de 10 pedidos para evitar timeout e mostrar progresso real.</p>
   </div>
 
   <div class="card" id="uploadCard">
@@ -71,46 +74,80 @@ table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}th,td{p
     <div class="actions">
       <button class="btn green" onclick="processar()">Processar relatório</button>
       <button class="btn secondary" onclick="exportarCSV()" id="csvBtn" disabled>Baixar CSV</button>
-      <button class="btn secondary" onclick="window.print()" id="pdfBtn" disabled>Imprimir/PDF</button>
+      <button class="btn dark" onclick="window.print()" id="pdfBtn" disabled>Imprimir/PDF</button>
     </div>
     <div id="processMsg"></div>
-    <div class="progress hidden" id="progressWrap"><div class="bar" id="bar"></div></div>
+  </div>
+
+  <div class="card hidden" id="progressBox">
+    <h2 style="font-size:18px;color:var(--blue)">Processamento em andamento</h2>
+    <p class="note">Não feche esta página. Os pedidos estão sendo consultados na WBuy em pacotes.</p>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+    <div class="progress-meta">
+      <strong id="progressPct">0%</strong>
+      <span id="progressCount">0 de 0 pedidos</span>
+      <span id="progressEta">Estimando...</span>
+    </div>
   </div>
 
   <div id="resultado" class="hidden">
     <div class="grid4">
-      <div class="card kpi"><h4>Faturamento</h4><p id="kpiFat">R$ 0,00</p></div>
-      <div class="card kpi"><h4>Lucro estimado</h4><p id="kpiLucro">R$ 0,00</p></div>
+      <div class="card kpi" style="border-top-color:var(--orange)"><h4>Faturamento Shopee</h4><p id="canShopee">R$ 0,00</p></div>
+      <div class="card kpi" style="border-top-color:var(--yellow)"><h4>Faturamento Mercado Livre</h4><p id="canML">R$ 0,00</p></div>
+      <div class="card kpi" style="border-top-color:var(--blue)"><h4>Faturamento Site / Loja</h4><p id="canLoja">R$ 0,00</p></div>
+      <div class="card kpi" style="border-top-color:var(--dark);background:#f8f9fa"><h4>Total Bruto com Frete</h4><p id="kpiFat">R$ 0,00</p></div>
+    </div>
+
+    <div class="grid4">
+      <div class="card kpi"><h4>Receita Produtos sem Frete</h4><p id="kpiProdutos">R$ 0,00</p></div>
+      <div class="card kpi"><h4>CMV</h4><p id="kpiCmv">R$ 0,00</p></div>
+      <div class="card kpi"><h4>Lucro Bruto Produtos</h4><p id="kpiLucro">R$ 0,00</p></div>
+      <div class="card kpi"><h4>Frete Total Cobrado</h4><p id="kpiFrete">R$ 0,00</p></div>
+    </div>
+
+    <div class="grid3">
       <div class="card kpi"><h4>Pedidos válidos</h4><p id="kpiValidos">0</p></div>
       <div class="card kpi"><h4>Ticket médio</h4><p id="kpiTicket">R$ 0,00</p></div>
+      <div class="card kpi"><h4>Margem Produtos</h4><p id="kpiMargem">0%</p></div>
     </div>
+
     <div class="card">
-      <h2 style="font-size:18px;color:var(--accent)">Faturamento por canal</h2>
-      <div class="grid4" style="margin-top:12px">
-        <div class="card kpi"><h4>Shopee</h4><p id="canShopee">R$ 0,00</p></div>
-        <div class="card kpi"><h4>Mercado Livre</h4><p id="canML">R$ 0,00</p></div>
-        <div class="card kpi"><h4>Site / Loja</h4><p id="canLoja">R$ 0,00</p></div>
-        <div class="card kpi"><h4>Margem média</h4><p id="kpiMargem">0%</p></div>
+      <h2 style="font-size:18px;color:var(--accent)">Vendas por plataforma / cliente</h2>
+      <div id="clientesPorCanal"></div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2 style="font-size:18px;color:var(--accent)">Produtos vendidos</h2>
+        <div style="overflow:auto"><table id="tblProdutos"><thead><tr><th>Produto</th><th>Qtd</th><th>Custo Total</th><th>Pedidos</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="card">
+        <h2 style="font-size:18px;color:var(--accent)">Frete por UF</h2>
+        <div style="overflow:auto"><table id="tblFreteUf"><thead><tr><th>UF</th><th>Total Frete</th><th>Pedidos</th></tr></thead><tbody></tbody></table></div>
       </div>
     </div>
-    <div class="card">
-      <h2 style="font-size:18px;color:var(--accent)">Pedidos</h2>
-      <div style="overflow:auto"><table id="tbl"><thead><tr><th>Pedido</th><th>Canal</th><th>Status</th><th>Valor</th><th>Frete</th><th>Taxa</th><th>Custo</th><th>Lucro</th></tr></thead><tbody></tbody></table></div>
+
+    <div class="card page-break">
+      <h2 style="font-size:18px;color:var(--accent)">Pedidos computados</h2>
+      <div style="overflow:auto"><table id="tbl"><thead><tr><th>Pedido</th><th>Canal</th><th>Status</th><th>Cliente</th><th>UF</th><th>Valor</th><th>Frete</th><th>Custo</th><th>Lucro</th></tr></thead><tbody></tbody></table></div>
     </div>
   </div>
 </section>
 </main>
 
 <script>
-const API_BASE = "https://emporio-chat-n8n.fn9pf1.easypanel.host/webhook";
-const TOKEN_WBUY_PADRAO = "MjlkNzFiMzEtNWJiYS00YzZjLWE5ZjItNjRiZmYxODMzYjVmOjQ2NTgyZWRkOTg2YTRmYTM4MDAzN2QxMmI1Y2U1NWE4";
+const API_BASE = "/api";
+const BATCH_SIZE = 10;
 
 let relatorioAtual = null;
+let pedidosColetados = [];
+
 const BRL = v => Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const PCT = v => (Number(v||0)*100).toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';
 
 function msg(id, text, cls){ document.getElementById(id).innerHTML = text ? `<div class="msg ${cls}">${text}</div>` : ''; }
 function api(path){ return API_BASE.replace(/\/$/,'') + path; }
+function escapeHtml(s){ return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 (function init(){
   const hoje = new Date();
@@ -142,7 +179,10 @@ async function login(){
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({usuario, senha})
     });
-    const d = await r.json();
+
+    const text = await r.text();
+    const d = text ? JSON.parse(text) : {};
+
     if(!d.ok) throw new Error(d.message || 'Login recusado.');
     localStorage.setItem('domfamaToken', d.token);
     msg('loginMsg','','');
@@ -172,6 +212,31 @@ async function lerPlanilha(){
   return [...new Set(ids)];
 }
 
+function chunks(arr, size){
+  const out = [];
+  for(let i=0; i<arr.length; i+=size) out.push(arr.slice(i, i+size));
+  return out;
+}
+
+function updateProgress(done, total, startMs){
+  const pct = total ? done / total : 0;
+  document.getElementById('bar').style.width = (pct * 100).toFixed(1) + '%';
+  document.getElementById('progressPct').textContent = PCT(pct);
+  document.getElementById('progressCount').textContent = `${done} de ${total} pedidos`;
+
+  if(done > 0){
+    const elapsed = (Date.now() - startMs) / 1000;
+    const perItem = elapsed / done;
+    const remaining = Math.max(0, total - done);
+    const eta = Math.ceil(perItem * remaining);
+    const min = Math.floor(eta / 60);
+    const sec = eta % 60;
+    document.getElementById('progressEta').textContent = `Estimativa: ${min}m ${sec}s restantes`;
+  }else{
+    document.getElementById('progressEta').textContent = 'Estimando...';
+  }
+}
+
 async function processar(){
   const token = localStorage.getItem('domfamaToken');
 
@@ -179,36 +244,134 @@ async function processar(){
     const ids = await lerPlanilha();
     if(!ids.length) throw new Error('Não encontrei coluna de ID/pedido/código na planilha.');
 
-    document.getElementById('progressWrap').classList.remove('hidden');
-    document.getElementById('bar').style.width = '25%';
-    msg('processMsg', `Enviando ${ids.length} pedidos para processamento. Aguarde.`, 'info');
+    pedidosColetados = [];
+    relatorioAtual = null;
 
-    const r = await fetch(api('/domfama-processar-wbuy'), {
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'Authorization':'Bearer '+token
-      },
-      body:JSON.stringify({
-        ids,
-        inicio:document.getElementById('inicio').value,
-        fim:document.getElementById('fim').value,
-        token_wbuy:TOKEN_WBUY_PADRAO
-      })
-    });
+    document.getElementById('resultado').classList.add('hidden');
+    document.getElementById('progressBox').classList.remove('hidden');
 
-    document.getElementById('bar').style.width = '100%';
-    const d = await r.json();
+    msg('processMsg', `Iniciando consulta de ${ids.length} pedidos em lotes de ${BATCH_SIZE}.`, 'info');
 
-    if(!d.ok) throw new Error(d.message || 'Erro ao processar.');
+    const lotes = chunks(ids, BATCH_SIZE);
+    const start = Date.now();
+    let processados = 0;
 
-    relatorioAtual = d;
-    render(d);
+    updateProgress(0, ids.length, start);
+
+    for(let i=0; i<lotes.length; i++){
+      const lote = lotes[i];
+
+      const r = await fetch(api('/domfama-processar-lote-wbuy'), {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'Authorization':'Bearer '+token
+        },
+        body:JSON.stringify({
+          ids:lote,
+          inicio:document.getElementById('inicio').value,
+          fim:document.getElementById('fim').value
+        })
+      });
+
+      const text = await r.text();
+      const d = text ? JSON.parse(text) : {};
+
+      if(!d.ok) throw new Error(d.message || `Erro no lote ${i + 1}.`);
+
+      pedidosColetados.push(...(d.pedidos || []));
+      processados = Math.min(processados + lote.length, ids.length);
+      updateProgress(processados, ids.length, start);
+    }
+
+    relatorioAtual = consolidarRelatorio(pedidosColetados);
+    render(relatorioAtual);
+
+    document.getElementById('progressBox').classList.add('hidden');
     msg('processMsg', 'Relatório processado com sucesso.', 'ok');
   }catch(e){
     msg('processMsg', e.message || 'Erro no processamento.', 'err');
     document.getElementById('bar').style.width = '0%';
   }
+}
+
+function consolidarRelatorio(pedidos){
+  const validos = pedidos.filter(p => p.valido);
+
+  const canais = {'Shopee':0,'Mercado Livre':0,'Loja':0};
+  const clientes = {'Shopee':{},'Mercado Livre':{},'Loja':{}};
+  const produtos = {};
+  const freteUf = {};
+
+  for(const p of validos){
+    const canal = p.canal || 'Loja';
+    canais[canal] = (canais[canal] || 0) + Number(p.valor || 0);
+
+    const cli = p.cliente || {};
+    const keyCli = `${cli.nome || 'Não informado'}|${cli.doc || 'N/A'}|${cli.telefone || 'N/A'}`;
+
+    if(!clientes[canal][keyCli]){
+      clientes[canal][keyCli] = {
+        nome:cli.nome || 'Não informado',
+        doc:cli.doc || 'N/A',
+        tel:cli.telefone || 'N/A',
+        total:0,
+        pedidos:0
+      };
+    }
+
+    clientes[canal][keyCli].total += Number(p.valor || 0);
+    clientes[canal][keyCli].pedidos += 1;
+
+    if(Number(p.frete || 0) > 0){
+      const uf = p.uf || 'N/A';
+      if(!freteUf[uf]) freteUf[uf] = {uf, valor:0, pedidos:0};
+      freteUf[uf].valor += Number(p.frete || 0);
+      freteUf[uf].pedidos += 1;
+    }
+
+    for(const item of (p.produtos || [])){
+      const nome = item.produto || 'Item indefinido';
+      if(!produtos[nome]){
+        produtos[nome] = {produto:nome, qtd:0, custo_total:0, pedidos:0};
+      }
+      produtos[nome].qtd += Number(item.qtd || 0);
+      produtos[nome].custo_total += Number(item.custo_total || 0);
+      produtos[nome].pedidos += 1;
+    }
+  }
+
+  const total = campo => validos.reduce((s,p)=>s+Number(p[campo]||0),0);
+  const faturamento = total('valor');
+  const totalProdutos = total('receita_produtos');
+  const totalCusto = total('custo_produtos');
+  const lucroProdutos = totalProdutos - totalCusto;
+
+  const clientes_por_canal = {};
+  for(const canal of Object.keys(clientes)){
+    clientes_por_canal[canal] = Object.values(clientes[canal]).sort((a,b)=>b.total-a.total);
+  }
+
+  return {
+    ok:true,
+    gerado_em:new Date().toISOString(),
+    qtd_pedidos_totais:pedidos.length,
+    qtd_pedidos_validos:validos.length,
+    faturamento,
+    total_geral:faturamento,
+    total_produtos:totalProdutos,
+    total_frete:total('frete'),
+    total_custo:totalCusto,
+    lucro_produtos:lucroProdutos,
+    lucro:lucroProdutos,
+    margem_media:totalProdutos > 0 ? lucroProdutos / totalProdutos : 0,
+    ticket_medio:validos.length ? faturamento / validos.length : 0,
+    canais,
+    clientes_por_canal,
+    produtos:Object.values(produtos).sort((a,b)=>b.qtd-a.qtd),
+    frete_uf:Object.values(freteUf).sort((a,b)=>b.valor-a.valor),
+    pedidos
+  };
 }
 
 function render(d){
@@ -217,38 +380,86 @@ function render(d){
   document.getElementById('pdfBtn').disabled = false;
 
   document.getElementById('kpiFat').textContent = BRL(d.faturamento);
-  document.getElementById('kpiLucro').textContent = BRL(d.lucro);
+  document.getElementById('kpiProdutos').textContent = BRL(d.total_produtos);
+  document.getElementById('kpiCmv').textContent = BRL(d.total_custo);
+  document.getElementById('kpiLucro').textContent = BRL(d.lucro_produtos);
+  document.getElementById('kpiFrete').textContent = BRL(d.total_frete);
   document.getElementById('kpiValidos').textContent = d.qtd_pedidos_validos || 0;
   document.getElementById('kpiTicket').textContent = BRL(d.ticket_medio);
   document.getElementById('kpiMargem').textContent = PCT(d.margem_media);
+
   document.getElementById('canShopee').textContent = BRL(d.canais?.Shopee);
   document.getElementById('canML').textContent = BRL(d.canais?.['Mercado Livre']);
   document.getElementById('canLoja').textContent = BRL(d.canais?.Loja);
 
-  const tb = document.querySelector('#tbl tbody');
-  tb.innerHTML = (d.pedidos || []).map(p => `<tr>
+  const canaisOrdem = ['Mercado Livre','Shopee','Loja'];
+
+  document.getElementById('clientesPorCanal').innerHTML = canaisOrdem.map(canal => {
+    const rows = d.clientes_por_canal?.[canal] || [];
+    if(!rows.length) return '';
+
+    return `<div class="platform-title">Plataforma: ${escapeHtml(canal)}</div>
+      <div style="overflow:auto"><table>
+        <thead><tr><th>Cliente</th><th>CPF/CNPJ</th><th>Telefone</th><th>Pedidos</th><th>Total Comprado</th></tr></thead>
+        <tbody>${rows.map(c => `<tr>
+          <td>${escapeHtml(c.nome)}</td>
+          <td>${escapeHtml(c.doc)}</td>
+          <td>${escapeHtml(c.tel)}</td>
+          <td>${c.pedidos}</td>
+          <td>${BRL(c.total)}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>`;
+  }).join('');
+
+  document.querySelector('#tblProdutos tbody').innerHTML = (d.produtos || []).map(p => `<tr>
+    <td>${escapeHtml(p.produto)}</td>
+    <td>${p.qtd}</td>
+    <td>${BRL(p.custo_total)}</td>
+    <td>${p.pedidos}</td>
+  </tr>`).join('');
+
+  document.querySelector('#tblFreteUf tbody').innerHTML = (d.frete_uf || []).map(f => `<tr>
+    <td>${escapeHtml(f.uf)}</td>
+    <td>${BRL(f.valor)}</td>
+    <td>${f.pedidos}</td>
+  </tr>`).join('');
+
+  document.querySelector('#tbl tbody').innerHTML = (d.pedidos || []).filter(p=>p.valido).map(p => `<tr>
     <td>${escapeHtml(p.pedido_id)}</td>
     <td>${escapeHtml(p.canal)}</td>
-    <td>${escapeHtml(p.status || p.status_id)}</td>
+    <td>${escapeHtml(p.status)}</td>
+    <td>${escapeHtml(p.cliente?.nome || '')}</td>
+    <td>${escapeHtml(p.uf || '')}</td>
     <td>${BRL(p.valor)}</td>
     <td>${BRL(p.frete)}</td>
-    <td>${BRL(p.taxa)}</td>
     <td>${BRL(p.custo_produtos)}</td>
-    <td>${BRL(p.lucro)}</td>
+    <td>${BRL(p.lucro_produtos)}</td>
   </tr>`).join('');
-}
-
-function escapeHtml(s){
-  return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 function exportarCSV(){
   if(!relatorioAtual) return;
+
   const rows = relatorioAtual.pedidos || [];
-  const header = ['pedido_id','canal','status','status_id','valido','valor','frete','taxa','custo_produtos','lucro','margem'];
+  const header = ['pedido_id','data','canal','status','valido','cliente','uf','valor','frete','receita_produtos','custo_produtos','lucro_produtos'];
+
   const csv = [header.join(';')]
-    .concat(rows.map(r => header.map(h => String(r[h]??'').replace(/;/g,',')).join(';')))
+    .concat(rows.map(r => [
+      r.pedido_id,
+      r.data,
+      r.canal,
+      r.status,
+      r.valido,
+      r.cliente?.nome,
+      r.uf,
+      r.valor,
+      r.frete,
+      r.receita_produtos,
+      r.custo_produtos,
+      r.lucro_produtos
+    ].map(v => String(v??'').replace(/;/g,',')).join(';')))
     .join('\n');
+
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
