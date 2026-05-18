@@ -72,7 +72,7 @@ table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}th,td{p
     <input type="file" id="planilha" accept=".xlsx,.xls,.csv">
     <p class="note">A planilha precisa ter coluna de pedido (<b>id</b>, <b>pedido</b>, <b>codigo</b>, <b>código</b>, <b>order_id</b> ou <b>numero</b>) e coluna de data (<b>data</b>, <b>data venda</b>, <b>data_venda</b>, <b>created_at</b>, <b>cadastro</b>, <b>emissão</b> ou <b>emissao</b>).</p>
     <div class="actions">
-      <button class="btn green" onclick="processar()">Processar relatório</button>
+      <button class="btn green" id="processBtn" onclick="processar()">Processar relatório</button>
       <button class="btn secondary" onclick="exportarCSV()" id="csvBtn" disabled>Baixar CSV</button>
       <button class="btn dark" onclick="window.print()" id="pdfBtn" disabled>Imprimir/PDF</button>
     </div>
@@ -215,7 +215,7 @@ async function lerPlanilha(){
   const foraPeriodo = [];
 
   const idKeys = ['id','pedido','codigo','código','order_id','numero','número'];
-  const dataKeys = ['data','data venda','data_venda','created_at','cadastro','dt venda','emissão','emissao'];
+  const dataKeys = ['data','data venda','data_venda','created_at','cadastro','dt venda','emissão','emissao','data pedido','data_pedido','data compra','data_compra'];
 
   for(const r of rows){
     const keyId = Object.keys(r).find(k =>
@@ -228,7 +228,7 @@ async function lerPlanilha(){
 
     if(!keyId || !r[keyId]) continue;
 
-    const id = String(r[keyId]).trim();
+    const id = String(r[keyId]).trim().replace(/\.0$/, '');
 
     // Se a planilha não tiver coluna de data, NÃO consulta tudo sem avisar.
     if(!keyData || !r[keyData]){
@@ -321,38 +321,11 @@ function updateProgress(done, total, startMs){
   }
 }
 
-async function processar(){
-  const token = localStorage.getItem('domfamaToken');
+async function chamarLoteComRetry(lote, token, indiceLote, tentativas = 3){
+  let ultimoErro = null;
 
-  try{
-    const ids = await lerPlanilha();
-    const totalPedidosBusca = ids.length;
-    const totalLotes = Math.ceil(totalPedidosBusca / BATCH_SIZE);
-
-    msg(
-      'processMsg',
-      `Serão consultados ${totalPedidosBusca} pedidos dentro do período selecionado, em ${totalLotes} lotes de até ${BATCH_SIZE}.`,
-      'info'
-    );
-    if(!ids.length) throw new Error('Não encontrei coluna de ID/pedido/código na planilha.');
-
-    pedidosColetados = [];
-    relatorioAtual = null;
-
-    document.getElementById('resultado').classList.add('hidden');
-    document.getElementById('progressBox').classList.remove('hidden');
-
-    msg('processMsg', `Iniciando consulta de ${ids.length} pedidos em lotes de ${BATCH_SIZE}.`, 'info');
-
-    const lotes = chunks(ids, BATCH_SIZE);
-    const start = Date.now();
-    let processados = 0;
-
-    updateProgress(0, ids.length, start);
-
-    for(let i=0; i<lotes.length; i++){
-      const lote = lotes[i];
-
+  for(let tentativa = 1; tentativa <= tentativas; tentativa++){
+    try{
       const r = await fetch(api('/domfama-processar-lote-wbuy'), {
         method:'POST',
         headers:{
@@ -367,23 +340,117 @@ async function processar(){
       });
 
       const text = await r.text();
-      const d = text ? JSON.parse(text) : {};
+      let d = {};
 
-      if(!d.ok) throw new Error(d.message || `Erro no lote ${i + 1}.`);
+      try{
+        d = text ? JSON.parse(text) : {};
+      }catch(parseErr){
+        throw new Error(`Resposta inválida do n8n no lote ${indiceLote}. Retorno: ${text.slice(0, 180)}`);
+      }
+
+      if(!r.ok){
+        throw new Error(d.message || `HTTP ${r.status} no lote ${indiceLote}.`);
+      }
+
+      if(!d.ok){
+        throw new Error(d.message || `Erro no lote ${indiceLote}.`);
+      }
+
+      return d;
+    }catch(e){
+      ultimoErro = e;
+
+      if(tentativa < tentativas){
+        msg(
+          'processMsg',
+          `Falha no lote ${indiceLote}. Tentando novamente (${tentativa + 1}/${tentativas})...`,
+          'info'
+        );
+        await new Promise(resolve => setTimeout(resolve, 2500));
+      }
+    }
+  }
+
+  throw ultimoErro;
+}
+
+async function processar(){
+  const token = localStorage.getItem('domfamaToken');
+  const processBtn = document.getElementById('processBtn');
+
+  if(!token){
+    msg('processMsg', 'Sessão expirada. Faça login novamente.', 'err');
+    logout();
+    return;
+  }
+
+  try{
+    processBtn.disabled = true;
+    processBtn.textContent = 'Processando...';
+
+    const ids = await lerPlanilha();
+
+    if(!ids.length){
+      throw new Error('Não encontrei pedidos dentro do período selecionado.');
+    }
+
+    const totalPedidosBusca = ids.length;
+    const lotes = chunks(ids, BATCH_SIZE);
+    const totalLotes = lotes.length;
+
+    pedidosColetados = [];
+    relatorioAtual = null;
+
+    document.getElementById('resultado').classList.add('hidden');
+    document.getElementById('progressBox').classList.remove('hidden');
+
+    msg(
+      'processMsg',
+      `Serão consultados ${totalPedidosBusca} pedidos dentro do período selecionado, em ${totalLotes} lotes de até ${BATCH_SIZE}.`,
+      'info'
+    );
+
+    const start = Date.now();
+    let processados = 0;
+
+    updateProgress(0, totalPedidosBusca, start);
+
+    for(let i = 0; i < totalLotes; i++){
+      const lote = lotes[i];
+      const numeroLote = i + 1;
+
+      msg(
+        'processMsg',
+        `Consultando lote ${numeroLote} de ${totalLotes}: ${lote.length} pedidos.`,
+        'info'
+      );
+
+      const d = await chamarLoteComRetry(lote, token, numeroLote);
 
       pedidosColetados.push(...(d.pedidos || []));
-      processados = Math.min(processados + lote.length, ids.length);
-      updateProgress(processados, ids.length, start);
+
+      processados = Math.min(processados + lote.length, totalPedidosBusca);
+      updateProgress(processados, totalPedidosBusca, start);
     }
 
     relatorioAtual = consolidarRelatorio(pedidosColetados);
     render(relatorioAtual);
 
     document.getElementById('progressBox').classList.add('hidden');
-    msg('processMsg', 'Relatório processado com sucesso.', 'ok');
+
+    msg(
+      'processMsg',
+      `Relatório processado com sucesso. ${relatorioAtual.qtd_pedidos_validos} pedidos válidos de ${relatorioAtual.qtd_pedidos_totais} consultados.`,
+      'ok'
+    );
   }catch(e){
     msg('processMsg', e.message || 'Erro no processamento.', 'err');
     document.getElementById('bar').style.width = '0%';
+  }finally{
+    if(processBtn){
+      processBtn.disabled = false;
+      processBtn.textContent = 'Processar relatório';
+    }
   }
 }
 
