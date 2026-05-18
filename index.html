@@ -70,7 +70,7 @@ table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}th,td{p
   <div class="card" id="uploadCard">
     <h2 style="font-size:18px;color:var(--accent)">2. Planilha de pedidos</h2>
     <input type="file" id="planilha" accept=".xlsx,.xls,.csv">
-    <p class="note">A planilha precisa ter coluna de pedido (<b>id</b>, <b>pedido</b>, <b>codigo</b>, <b>código</b>, <b>order_id</b> ou <b>numero</b>) e coluna de data (<b>data</b>, <b>data venda</b>, <b>data_venda</b>, <b>created_at</b>, <b>cadastro</b>, <b>emissão</b> ou <b>emissao</b>).</p>
+    <p class="note">A planilha precisa ser a mesma que foi extraida da Wbuy.</p>
     <div class="actions">
       <button class="btn green" id="processBtn" onclick="processar()">Processar relatório</button>
       <button class="btn secondary" onclick="exportarCSV()" id="csvBtn" disabled>Baixar CSV</button>
