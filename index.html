@@ -196,20 +196,104 @@ async function lerPlanilha(){
   const file = document.getElementById('planilha').files[0];
   if(!file) throw new Error('Selecione uma planilha.');
 
-  const buf = await file.arrayBuffer();
-  const wb = XLSX.read(buf, {type:'array'});
-  const ws = wb.Sheets[wb.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json(ws, {defval:''});
-  const ids = [];
+  const inicio = document.getElementById('inicio').value;
+  const fim = document.getElementById('fim').value;
 
-  for(const r of rows){
-    const key = Object.keys(r).find(k =>
-      ['id','pedido','codigo','código','order_id','numero','número'].includes(String(k).toLowerCase().trim())
-    );
-    if(key && r[key]) ids.push(String(r[key]).trim());
+  if(!inicio || !fim){
+    throw new Error('Informe a data inicial e final.');
   }
 
-  return [...new Set(ids)];
+  const dtInicio = new Date(inicio + 'T00:00:00');
+  const dtFim = new Date(fim + 'T23:59:59');
+
+  const buf = await file.arrayBuffer();
+  const wb = XLSX.read(buf, { type:'array' });
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, { defval:'' });
+
+  const ids = [];
+  const foraPeriodo = [];
+
+  const idKeys = ['id','pedido','codigo','código','order_id','numero','número'];
+  const dataKeys = ['data','data venda','data_venda','created_at','cadastro','dt venda','emissão','emissao'];
+
+  for(const r of rows){
+    const keyId = Object.keys(r).find(k =>
+      idKeys.includes(String(k).toLowerCase().trim())
+    );
+
+    const keyData = Object.keys(r).find(k =>
+      dataKeys.includes(String(k).toLowerCase().trim())
+    );
+
+    if(!keyId || !r[keyId]) continue;
+
+    const id = String(r[keyId]).trim();
+
+    // Se a planilha não tiver coluna de data, NÃO consulta tudo sem avisar.
+    if(!keyData || !r[keyData]){
+      throw new Error('A planilha precisa ter uma coluna de data para filtrar antes da consulta WBuy.');
+    }
+
+    const dataPedido = normalizarDataPlanilha(r[keyData]);
+
+    if(!dataPedido){
+      foraPeriodo.push(id);
+      continue;
+    }
+
+    if(dataPedido >= dtInicio && dataPedido <= dtFim){
+      ids.push(id);
+    }else{
+      foraPeriodo.push(id);
+    }
+  }
+
+  const unicos = [...new Set(ids)];
+
+  if(!unicos.length){
+    throw new Error('Nenhum pedido da planilha está dentro do período selecionado.');
+  }
+
+  msg(
+    'processMsg',
+    `Período filtrado: ${unicos.length} pedidos serão consultados. ${foraPeriodo.length} pedidos ficaram fora do período.`,
+    'info'
+  );
+
+  return unicos;
+}
+
+function normalizarDataPlanilha(valor){
+  if(!valor) return null;
+
+  // Excel serial date
+  if(typeof valor === 'number'){
+    const parsed = XLSX.SSF.parse_date_code(valor);
+    if(!parsed) return null;
+    return new Date(parsed.y, parsed.m - 1, parsed.d, 12, 0, 0);
+  }
+
+  const s = String(valor).trim();
+
+  // YYYY-MM-DD ou YYYY-MM-DD HH:mm:ss
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(iso){
+    return new Date(`${iso[1]}-${iso[2]}-${iso[3]}T12:00:00`);
+  }
+
+  // DD/MM/YYYY
+  const br = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if(br){
+    return new Date(`${br[3]}-${br[2]}-${br[1]}T12:00:00`);
+  }
+
+  const tentativa = new Date(s);
+  if(!isNaN(tentativa.getTime())){
+    return tentativa;
+  }
+
+  return null;
 }
 
 function chunks(arr, size){
@@ -242,6 +326,14 @@ async function processar(){
 
   try{
     const ids = await lerPlanilha();
+    const totalPedidosBusca = ids.length;
+    const totalLotes = Math.ceil(totalPedidosBusca / BATCH_SIZE);
+
+    msg(
+      'processMsg',
+      `Serão consultados ${totalPedidosBusca} pedidos dentro do período selecionado, em ${totalLotes} lotes de até ${BATCH_SIZE}.`,
+      'info'
+    );
     if(!ids.length) throw new Error('Não encontrei coluna de ID/pedido/código na planilha.');
 
     pedidosColetados = [];
@@ -261,7 +353,7 @@ async function processar(){
     for(let i=0; i<lotes.length; i++){
       const lote = lotes[i];
 
-      const r = await fetch(api('/domfama-processar-lote-wbuy'), {
+      const r = await fetch(api('/domfama-processar-wbuy'), {
         method:'POST',
         headers:{
           'Content-Type':'application/json',
