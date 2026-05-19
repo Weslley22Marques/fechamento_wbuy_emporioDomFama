@@ -28,10 +28,15 @@ table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}th,td{p
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.note{font-size:12px;color:#777;margin-top:7px;line-height:1.45}
 .section-title{margin-top:28px;border-bottom:1px solid #eee;padding-bottom:8px;color:#343a40;font-size:16px;text-transform:uppercase;letter-spacing:.5px}
 .platform-title{color:#495057;font-size:14px;margin-bottom:5px;margin-top:22px;font-weight:bold;border-left:3px solid var(--blue);padding-left:8px}
+.insight-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:14px}
+@media(max-width:900px){.insight-grid{grid-template-columns:1fr}}
+.insight-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}
+.insight-card h3{font-size:14px;color:var(--accent);margin-bottom:8px}
+.insight-card p{font-size:12px;color:#666;line-height:1.45}
 .badge{display:inline-block;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:800}
 .badge.ok{background:#e8f5e9;color:#2d7d46;border:1px solid #c8e6c9}
-.badge.err{background:#ffebee;color:var(--red);border:1px solid #ffcdd2}
 .badge.warn{background:#fff8e1;color:#8a5a00;border:1px solid #ffe082}
+.badge.err{background:#ffebee;color:var(--red);border:1px solid #ffcdd2}
 @media print{.topbar,header .btn,.no-print,.actions,#configCard,#uploadCard,#progressBox{display:none!important}body{background:#fff}main{max-width:100%;margin:0;padding:0}.card{box-shadow:none;border:1px solid #ccc;page-break-inside:avoid}table{border:1px solid #ccc}tr{page-break-inside:avoid}th,td{border:1px solid #ccc;color:#000;padding:8px}.page-break{page-break-before:always}}
 </style>
 </head>
@@ -116,10 +121,76 @@ table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}th,td{p
     </div>
 
     <div class="grid4">
-      <div class="card kpi"><h4>Pedidos devolvidos</h4><p id="kpiDevolvidos">0</p></div>
-      <div class="card kpi"><h4>Valor devolvido</h4><p id="kpiValorDevolvido">R$ 0,00</p></div>
-      <div class="card kpi"><h4>Validação Site x WBuy</h4><p id="kpiValidacao">0/0</p></div>
-      <div class="card kpi"><h4>Diferença encontrada</h4><p id="kpiDivergencia">R$ 0,00</p></div>
+      <div class="card kpi"><h4>Receita sem frete</h4><p id="kpiReceitaSemFrete">R$ 0,00</p></div>
+      <div class="card kpi"><h4>Frete sobre venda</h4><p id="kpiFretePct">0%</p></div>
+      <div class="card kpi"><h4>Melhor UF por lucro</h4><p id="kpiMelhorUf">-</p></div>
+      <div class="card kpi"><h4>Melhor canal por ticket</h4><p id="kpiMelhorCanalTicket">-</p></div>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:18px;color:var(--accent)">Composição da receita</h2>
+      <p class="note">Separação objetiva entre receita de produtos e frete cobrado. O faturamento bruto inclui frete; a receita comercial real dos produtos fica separada.</p>
+      <div style="overflow:auto">
+        <table id="tblComposicaoReceita">
+          <thead>
+            <tr>
+              <th>Indicador</th>
+              <th>Valor</th>
+              <th>% sobre total bruto</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2 style="font-size:18px;color:var(--accent)">Ticket médio por plataforma</h2>
+        <p class="note">Mostra o valor médio real dos pedidos por canal, separando faturamento, frete e volume de pedidos.</p>
+        <div style="overflow:auto">
+          <table id="tblTicketCanal">
+            <thead>
+              <tr><th>Canal</th><th>Pedidos</th><th>Faturamento</th><th>Frete</th><th>Ticket Médio</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 style="font-size:18px;color:var(--accent)">Estados mais lucrativos</h2>
+        <p class="note">Ordenado pelo lucro estimado dos pedidos válidos. Ajuda a identificar praças fortes e regiões que consomem margem.</p>
+        <div style="overflow:auto">
+          <table id="tblEstadosLucro">
+            <thead>
+              <tr><th>UF</th><th>Pedidos</th><th>Venda</th><th>Frete</th><th>Custo</th><th>Lucro</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2 style="font-size:18px;color:var(--accent)">Produtos mais vendidos por canal</h2>
+        <p class="note">Ranking por quantidade vendida dentro de cada plataforma. Útil para entender o comportamento de compra de cada canal.</p>
+        <div id="produtosPorCanal"></div>
+      </div>
+
+      <div class="card">
+        <h2 style="font-size:18px;color:var(--accent)">Produtos que puxam pedido</h2>
+        <p class="note">Combinações que aparecem juntas no mesmo pedido. Base para kits, ofertas casadas e sugestão de compra no site.</p>
+        <div style="overflow:auto">
+          <table id="tblProdutosPuxam">
+            <thead>
+              <tr><th>Produto</th><th>Comprado junto com</th><th>Pedidos juntos</th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <div class="card">
@@ -134,20 +205,8 @@ table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}th,td{p
       </div>
       <div class="card">
         <h2 style="font-size:18px;color:var(--accent)">Frete por UF</h2>
-        <div style="overflow:auto"><table id="tblFreteUf"><thead><tr><th>UF</th><th>Total Frete</th><th>Pedidos</th></tr></thead><tbody></tbody></table></div>
+        <div style="overflow:auto"><table id="tblFreteUf"><thead><tr><th>UF</th><th>Venda</th><th>Total Frete</th><th>% Frete/Venda</th><th>Frete Médio</th><th>Pedidos</th></tr></thead><tbody></tbody></table></div>
       </div>
-    </div>
-
-    <div class="card">
-      <h2 style="font-size:18px;color:var(--accent)">Validação Site x WBuy</h2>
-      <p class="note">Compara os valores da planilha enviada com os valores retornados pela WBuy. Divergências aparecem em vermelho.</p>
-      <div style="overflow:auto"><table id="tblValidacao"><thead><tr><th>Pedido</th><th>Status</th><th>Valor Planilha</th><th>Valor WBuy</th><th>Diferença</th><th>Frete Planilha</th><th>Frete WBuy</th><th>Resultado</th></tr></thead><tbody></tbody></table></div>
-    </div>
-
-    <div class="card">
-      <h2 style="font-size:18px;color:var(--accent)">Análise de devolvidos</h2>
-      <p class="note">Pedidos com status devolvido, devolução parcial ou similar ficam separados e não entram nas vendas computadas.</p>
-      <div style="overflow:auto"><table id="tblDevolvidos"><thead><tr><th>Pedido</th><th>Status</th><th>Canal</th><th>Cliente</th><th>UF</th><th>Valor</th><th>Frete</th></tr></thead><tbody></tbody></table></div>
     </div>
 
     <div class="card page-break">
@@ -164,7 +223,6 @@ const BATCH_SIZE = 10;
 
 let relatorioAtual = null;
 let pedidosColetados = [];
-let basePlanilhaPorId = {};
 
 const BRL = v => Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const PCT = v => (Number(v||0)*100).toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';
@@ -237,50 +295,29 @@ async function lerPlanilha(){
 
   const ids = [];
   const foraPeriodo = [];
-  basePlanilhaPorId = {};
 
-  const idKeys = ['id','pedido','codigo','código','order_id','numero','número','id pedido','id_pedido'];
+  const idKeys = ['id','pedido','codigo','código','order_id','numero','número'];
   const dataKeys = ['data','data venda','data_venda','created_at','cadastro','dt venda','emissão','emissao','data pedido','data_pedido','data compra','data_compra'];
-  const valorKeys = ['total','valor','valor total','valor_total','total pedido','total_pedido','total comprado','total_comprado'];
-  const freteKeys = ['frete','valor frete','valor_frete','frete pedido','frete_pedido'];
-  const statusKeys = ['status','situação','situacao','status pedido','status_pedido'];
-  const ufKeys = ['uf','estado','estado destino','estado_destino'];
-  const clienteKeys = ['cliente','nome','nome cliente','nome_cliente'];
-
-  function acharKey(obj, keys){
-    return Object.keys(obj).find(k => keys.includes(String(k).toLowerCase().trim()));
-  }
 
   for(const r of rows){
-    const keyId = acharKey(r, idKeys);
-    const keyData = acharKey(r, dataKeys);
+    const keyId = Object.keys(r).find(k =>
+      idKeys.includes(String(k).toLowerCase().trim())
+    );
+
+    const keyData = Object.keys(r).find(k =>
+      dataKeys.includes(String(k).toLowerCase().trim())
+    );
 
     if(!keyId || !r[keyId]) continue;
 
     const id = String(r[keyId]).trim().replace(/\.0$/, '');
 
+    // Se a planilha não tiver coluna de data, NÃO consulta tudo sem avisar.
     if(!keyData || !r[keyData]){
       throw new Error('A planilha precisa ter uma coluna de data para filtrar antes da consulta WBuy.');
     }
 
     const dataPedido = normalizarDataPlanilha(r[keyData]);
-
-    const keyValor = acharKey(r, valorKeys);
-    const keyFrete = acharKey(r, freteKeys);
-    const keyStatus = acharKey(r, statusKeys);
-    const keyUf = acharKey(r, ufKeys);
-    const keyCliente = acharKey(r, clienteKeys);
-
-    basePlanilhaPorId[id] = {
-      pedido_id:id,
-      data:dataPedido ? dataPedido.toISOString().slice(0,10) : '',
-      valor_planilha:keyValor ? moedaParaNumero(r[keyValor]) : null,
-      frete_planilha:keyFrete ? moedaParaNumero(r[keyFrete]) : null,
-      status_planilha:keyStatus ? String(r[keyStatus] || '') : '',
-      uf_planilha:keyUf ? String(r[keyUf] || '') : '',
-      cliente_planilha:keyCliente ? String(r[keyCliente] || '') : '',
-      linha_original:r
-    };
 
     if(!dataPedido){
       foraPeriodo.push(id);
@@ -307,25 +344,6 @@ async function lerPlanilha(){
   );
 
   return unicos;
-}
-
-function moedaParaNumero(v){
-  if(v === null || v === undefined || v === '') return null;
-  if(typeof v === 'number') return v;
-
-  let s = String(v)
-    .replace('R$', '')
-    .replace(/\s/g, '')
-    .trim();
-
-  if(s.includes(',') && s.includes('.')){
-    s = s.replace(/\./g, '').replace(',', '.');
-  }else if(s.includes(',')){
-    s = s.replace(',', '.');
-  }
-
-  const n = Number(s);
-  return Number.isFinite(n) ? n : null;
 }
 
 function normalizarDataPlanilha(valor){
@@ -518,96 +536,47 @@ async function processar(){
   }
 }
 
-function statusVendaValida(status){
-  const s = String(status || '').toLowerCase();
-
-  const validos = [
-    'pagamento efetuado',
-    'em produção',
-    'em producao',
-    'em separação',
-    'em separacao',
-    'em expedição',
-    'em expedicao',
-    'em transporte',
-    'saiu para entrega',
-    'disponível para retirada',
-    'disponivel para retirada',
-    'pedido entregue',
-    'disponível',
-    'disponivel',
-    'fatura gerada',
-    'nota fiscal emitida'
-  ];
-
-  const invalidos = [
-    'aguardando',
-    'pagamento em análise',
-    'pagamento em analise',
-    'cancel',
-    'negado',
-    'em análise',
-    'em analise'
-  ];
-
-  if(ehDevolvido(status)) return false;
-  return validos.some(v => s.includes(v)) && !invalidos.some(v => s.includes(v));
-}
-
-function ehDevolvido(status){
-  const s = String(status || '').toLowerCase();
-  return s.includes('devolvido') || s.includes('devolução') || s.includes('devolucao');
-}
-
-function validarPedidoComPlanilha(p){
-  const base = basePlanilhaPorId[String(p.pedido_id)] || {};
-  const valorPlanilha = base.valor_planilha;
-  const fretePlanilha = base.frete_planilha;
-  const valorWbuy = Number(p.valor || 0);
-  const freteWbuy = Number(p.frete || 0);
-
-  const temValorPlanilha = valorPlanilha !== null && valorPlanilha !== undefined;
-  const temFretePlanilha = fretePlanilha !== null && fretePlanilha !== undefined;
-
-  const difValor = temValorPlanilha ? valorWbuy - Number(valorPlanilha || 0) : 0;
-  const difFrete = temFretePlanilha ? freteWbuy - Number(fretePlanilha || 0) : 0;
-
-  const okValor = !temValorPlanilha || Math.abs(difValor) < 0.02;
-  const okFrete = !temFretePlanilha || Math.abs(difFrete) < 0.02;
-
-  return {
-    pedido_id:p.pedido_id,
-    status:p.status || '',
-    valor_planilha:temValorPlanilha ? Number(valorPlanilha || 0) : null,
-    valor_wbuy:valorWbuy,
-    diferenca_valor:difValor,
-    frete_planilha:temFretePlanilha ? Number(fretePlanilha || 0) : null,
-    frete_wbuy:freteWbuy,
-    diferenca_frete:difFrete,
-    ok:okValor && okFrete,
-    base
-  };
+function normalizarProdutoNome(nome){
+  return String(nome || 'Item indefinido').trim();
 }
 
 function consolidarRelatorio(pedidos){
-  // Regra final de segurança no frontend: só entra status que comprova venda paga/concluída.
-  const devolvidos = pedidos.filter(p => ehDevolvido(p.status));
-  const validos = pedidos.filter(p => statusVendaValida(p.status));
-
-  // Força a flag para manter consistência visual/exportação.
-  for(const p of pedidos){
-    p.devolvido = ehDevolvido(p.status);
-    p.valido = statusVendaValida(p.status);
-  }
+  const validos = pedidos.filter(p => p.valido);
 
   const canais = {'Shopee':0,'Mercado Livre':0,'Loja':0};
   const clientes = {'Shopee':{},'Mercado Livre':{},'Loja':{}};
   const produtos = {};
   const freteUf = {};
+  const canalStats = {
+    'Shopee':{canal:'Shopee', pedidos:0, faturamento:0, frete:0, receita_produtos:0, custo:0, lucro:0},
+    'Mercado Livre':{canal:'Mercado Livre', pedidos:0, faturamento:0, frete:0, receita_produtos:0, custo:0, lucro:0},
+    'Loja':{canal:'Loja', pedidos:0, faturamento:0, frete:0, receita_produtos:0, custo:0, lucro:0}
+  };
+  const produtosPorCanalMap = {'Shopee':{},'Mercado Livre':{},'Loja':{}};
+  const estadosLucroMap = {};
+  const paresProdutosMap = {};
 
   for(const p of validos){
     const canal = p.canal || 'Loja';
-    canais[canal] = (canais[canal] || 0) + Number(p.valor || 0);
+    const valorPedido = Number(p.valor || 0);
+    const fretePedido = Number(p.frete || 0);
+    const receitaProdutos = Number(p.receita_produtos || 0);
+    const custoPedido = Number(p.custo_produtos || 0);
+    const lucroPedido = Number(p.lucro_produtos || 0);
+    const uf = p.uf || p.cliente?.uf || 'N/A';
+
+    canais[canal] = (canais[canal] || 0) + valorPedido;
+
+    if(!canalStats[canal]){
+      canalStats[canal] = {canal, pedidos:0, faturamento:0, frete:0, receita_produtos:0, custo:0, lucro:0};
+    }
+
+    canalStats[canal].pedidos += 1;
+    canalStats[canal].faturamento += valorPedido;
+    canalStats[canal].frete += fretePedido;
+    canalStats[canal].receita_produtos += receitaProdutos;
+    canalStats[canal].custo += custoPedido;
+    canalStats[canal].lucro += lucroPedido;
 
     const cli = p.cliente || {};
     const keyCli = `${cli.nome || 'Não informado'}|${cli.doc || 'N/A'}|${cli.telefone || 'N/A'}`;
@@ -622,34 +591,73 @@ function consolidarRelatorio(pedidos){
       };
     }
 
-    clientes[canal][keyCli].total += Number(p.valor || 0);
+    clientes[canal][keyCli].total += valorPedido;
     clientes[canal][keyCli].pedidos += 1;
 
-    // Frete por estado: SP: R$ X, RJ: R$ Y, etc.
-    const uf = p.uf || p.cliente?.uf || 'N/A';
-    if(!freteUf[uf]) freteUf[uf] = {uf, valor:0, pedidos:0};
-    freteUf[uf].valor += Number(p.frete || 0);
+    if(!freteUf[uf]){
+      freteUf[uf] = {uf, valor:0, venda:0, pedidos:0};
+    }
+    freteUf[uf].valor += fretePedido;
+    freteUf[uf].venda += valorPedido;
     freteUf[uf].pedidos += 1;
 
+    if(!estadosLucroMap[uf]){
+      estadosLucroMap[uf] = {uf, pedidos:0, venda:0, frete:0, custo:0, lucro:0};
+    }
+    estadosLucroMap[uf].pedidos += 1;
+    estadosLucroMap[uf].venda += valorPedido;
+    estadosLucroMap[uf].frete += fretePedido;
+    estadosLucroMap[uf].custo += custoPedido;
+    estadosLucroMap[uf].lucro += lucroPedido;
+
+    const nomesUnicosPedido = [];
+
     for(const item of (p.produtos || [])){
-      const nome = item.produto || 'Item indefinido';
+      const nome = normalizarProdutoNome(item.produto);
+      const qtd = Number(item.qtd || 0);
+      const custoTotal = Number(item.custo_total || 0);
+
       if(!produtos[nome]){
         produtos[nome] = {produto:nome, qtd:0, custo_total:0, pedidos:0};
       }
-      produtos[nome].qtd += Number(item.qtd || 0);
-      produtos[nome].custo_total += Number(item.custo_total || 0);
+      produtos[nome].qtd += qtd;
+      produtos[nome].custo_total += custoTotal;
       produtos[nome].pedidos += 1;
+
+      if(!produtosPorCanalMap[canal][nome]){
+        produtosPorCanalMap[canal][nome] = {produto:nome, canal, qtd:0, pedidos:0, custo_total:0};
+      }
+      produtosPorCanalMap[canal][nome].qtd += qtd;
+      produtosPorCanalMap[canal][nome].pedidos += 1;
+      produtosPorCanalMap[canal][nome].custo_total += custoTotal;
+
+      if(nome && !nomesUnicosPedido.includes(nome)){
+        nomesUnicosPedido.push(nome);
+      }
+    }
+
+    // Produtos que puxam pedido: pares comprados juntos.
+    const nomesOrdenados = nomesUnicosPedido.sort((a,b) => a.localeCompare(b));
+    for(let i=0; i<nomesOrdenados.length; i++){
+      for(let j=i+1; j<nomesOrdenados.length; j++){
+        const a = nomesOrdenados[i];
+        const b = nomesOrdenados[j];
+        const chave = `${a}|||${b}`;
+
+        if(!paresProdutosMap[chave]){
+          paresProdutosMap[chave] = {produto:a, junto_com:b, pedidos:0};
+        }
+
+        paresProdutosMap[chave].pedidos += 1;
+      }
     }
   }
-
-  const validacao = pedidos.map(validarPedidoComPlanilha);
-  const divergentes = validacao.filter(v => !v.ok);
-  const totalDivergencia = divergentes.reduce((s,v) => s + Math.abs(Number(v.diferenca_valor || 0)) + Math.abs(Number(v.diferenca_frete || 0)), 0);
 
   const total = campo => validos.reduce((s,p)=>s+Number(p[campo]||0),0);
   const faturamento = total('valor');
   const totalProdutos = total('receita_produtos');
   const totalCusto = total('custo_produtos');
+  const totalFrete = total('frete');
   const lucroProdutos = totalProdutos - totalCusto;
 
   const clientes_por_canal = {};
@@ -657,37 +665,79 @@ function consolidarRelatorio(pedidos){
     clientes_por_canal[canal] = Object.values(clientes[canal]).sort((a,b)=>b.total-a.total);
   }
 
+  const ticket_por_canal = Object.values(canalStats)
+    .filter(c => c.pedidos > 0)
+    .map(c => ({
+      ...c,
+      ticket_medio:c.pedidos ? c.faturamento / c.pedidos : 0,
+      frete_percentual:c.faturamento ? c.frete / c.faturamento : 0
+    }))
+    .sort((a,b) => b.faturamento - a.faturamento);
+
+  const produtos_por_canal = {};
+  for(const canal of Object.keys(produtosPorCanalMap)){
+    produtos_por_canal[canal] = Object.values(produtosPorCanalMap[canal])
+      .sort((a,b) => b.qtd - a.qtd)
+      .slice(0, 15);
+  }
+
+  const frete_uf = Object.values(freteUf)
+    .map(f => ({
+      ...f,
+      percentual_venda:f.venda ? f.valor / f.venda : 0,
+      frete_medio:f.pedidos ? f.valor / f.pedidos : 0
+    }))
+    .sort((a,b)=>b.valor-a.valor);
+
+  const estados_lucrativos = Object.values(estadosLucroMap)
+    .map(e => ({
+      ...e,
+      margem:e.venda ? e.lucro / e.venda : 0,
+      frete_percentual:e.venda ? e.frete / e.venda : 0
+    }))
+    .sort((a,b)=>b.lucro-a.lucro);
+
+  const produtos_puxam_pedido = Object.values(paresProdutosMap)
+    .filter(p => p.pedidos >= 2)
+    .sort((a,b)=>b.pedidos-a.pedidos)
+    .slice(0, 30);
+
+  const melhorUf = estados_lucrativos.length ? estados_lucrativos[0] : null;
+  const melhorCanalTicket = [...ticket_por_canal].sort((a,b)=>b.ticket_medio-a.ticket_medio)[0] || null;
+
   return {
     ok:true,
     gerado_em:new Date().toISOString(),
     qtd_pedidos_totais:pedidos.length,
     qtd_pedidos_validos:validos.length,
-    qtd_devolvidos:devolvidos.length,
-    valor_devolvido:devolvidos.reduce((s,p)=>s+Number(p.valor||0),0),
+
     faturamento,
     total_geral:faturamento,
     total_produtos:totalProdutos,
-    total_frete:total('frete'),
+    receita_sem_frete:totalProdutos,
+    total_frete:totalFrete,
+    frete_percentual:faturamento ? totalFrete / faturamento : 0,
     total_custo:totalCusto,
     lucro_produtos:lucroProdutos,
     lucro:lucroProdutos,
     margem_media:totalProdutos > 0 ? lucroProdutos / totalProdutos : 0,
     ticket_medio:validos.length ? faturamento / validos.length : 0,
+
+    melhor_uf:melhorUf,
+    melhor_canal_ticket:melhorCanalTicket,
+
     canais,
     clientes_por_canal,
     produtos:Object.values(produtos).sort((a,b)=>b.qtd-a.qtd),
-    frete_uf:Object.values(freteUf).sort((a,b)=>b.valor-a.valor),
+    frete_uf,
+    ticket_por_canal,
+    produtos_por_canal,
+    produtos_puxam_pedido,
+    estados_lucrativos,
     pedidos_validos_ordenados:[...validos].sort((a,b)=>Number(b.valor||0)-Number(a.valor||0)),
-    devolvidos:[...devolvidos].sort((a,b)=>Number(b.valor||0)-Number(a.valor||0)),
-    validacao:validacao.sort((a,b)=>Math.abs(Number(b.diferenca_valor||0))-Math.abs(Number(a.diferenca_valor||0))),
-    qtd_validacao_ok:validacao.filter(v=>v.ok).length,
-    qtd_validacao_total:validacao.length,
-    qtd_divergentes:divergentes.length,
-    total_divergencia:totalDivergencia,
     pedidos
   };
 }
-
 function render(d){
   document.getElementById('resultado').classList.remove('hidden');
   document.getElementById('csvBtn').disabled = false;
@@ -701,10 +751,58 @@ function render(d){
   document.getElementById('kpiValidos').textContent = d.qtd_pedidos_validos || 0;
   document.getElementById('kpiTicket').textContent = BRL(d.ticket_medio);
   document.getElementById('kpiMargem').textContent = PCT(d.margem_media);
-  document.getElementById('kpiDevolvidos').textContent = d.qtd_devolvidos || 0;
-  document.getElementById('kpiValorDevolvido').textContent = BRL(d.valor_devolvido || 0);
-  document.getElementById('kpiValidacao').textContent = `${d.qtd_validacao_ok || 0}/${d.qtd_validacao_total || 0}`;
-  document.getElementById('kpiDivergencia').textContent = BRL(d.total_divergencia || 0);
+  document.getElementById('kpiReceitaSemFrete').textContent = BRL(d.receita_sem_frete);
+  document.getElementById('kpiFretePct').textContent = PCT(d.frete_percentual);
+  document.getElementById('kpiMelhorUf').textContent = d.melhor_uf ? `${d.melhor_uf.uf} • ${BRL(d.melhor_uf.lucro)}` : '-';
+  document.getElementById('kpiMelhorCanalTicket').textContent = d.melhor_canal_ticket ? `${d.melhor_canal_ticket.canal} • ${BRL(d.melhor_canal_ticket.ticket_medio)}` : '-';
+
+  document.querySelector('#tblComposicaoReceita tbody').innerHTML = [
+    {nome:'Faturamento bruto com frete', valor:d.faturamento, pct:1},
+    {nome:'Receita de produtos sem frete', valor:d.total_produtos, pct:d.faturamento ? d.total_produtos / d.faturamento : 0},
+    {nome:'Frete cobrado do cliente', valor:d.total_frete, pct:d.faturamento ? d.total_frete / d.faturamento : 0},
+    {nome:'CMV dos produtos', valor:d.total_custo, pct:d.faturamento ? d.total_custo / d.faturamento : 0},
+    {nome:'Lucro bruto dos produtos', valor:d.lucro_produtos, pct:d.faturamento ? d.lucro_produtos / d.faturamento : 0}
+  ].map(r => `<tr><td>${r.nome}</td><td>${BRL(r.valor)}</td><td>${PCT(r.pct)}</td></tr>`).join('');
+
+  document.querySelector('#tblTicketCanal tbody').innerHTML = (d.ticket_por_canal || []).map(c => `<tr>
+    <td>${escapeHtml(c.canal)}</td>
+    <td>${c.pedidos}</td>
+    <td>${BRL(c.faturamento)}</td>
+    <td>${BRL(c.frete)}</td>
+    <td>${BRL(c.ticket_medio)}</td>
+  </tr>`).join('');
+
+  document.querySelector('#tblEstadosLucro tbody').innerHTML = (d.estados_lucrativos || []).map(e => `<tr>
+    <td>${escapeHtml(e.uf)}</td>
+    <td>${e.pedidos}</td>
+    <td>${BRL(e.venda)}</td>
+    <td>${BRL(e.frete)}</td>
+    <td>${BRL(e.custo)}</td>
+    <td>${BRL(e.lucro)}</td>
+  </tr>`).join('');
+
+  const canaisOrdemProdutos = ['Mercado Livre','Shopee','Loja'];
+  document.getElementById('produtosPorCanal').innerHTML = canaisOrdemProdutos.map(canal => {
+    const rows = d.produtos_por_canal?.[canal] || [];
+    if(!rows.length) return '';
+
+    return `<div class="platform-title">Plataforma: ${escapeHtml(canal)}</div>
+      <div style="overflow:auto"><table>
+        <thead><tr><th>Produto</th><th>Qtd</th><th>Pedidos</th><th>Custo Total</th></tr></thead>
+        <tbody>${rows.map(p => `<tr>
+          <td>${escapeHtml(p.produto)}</td>
+          <td>${p.qtd}</td>
+          <td>${p.pedidos}</td>
+          <td>${BRL(p.custo_total)}</td>
+        </tr>`).join('')}</tbody>
+      </table></div>`;
+  }).join('');
+
+  document.querySelector('#tblProdutosPuxam tbody').innerHTML = (d.produtos_puxam_pedido || []).map(p => `<tr>
+    <td>${escapeHtml(p.produto)}</td>
+    <td>${escapeHtml(p.junto_com)}</td>
+    <td>${p.pedidos}</td>
+  </tr>`).join('') || `<tr><td colspan="3">Sem combinações recorrentes suficientes no período.</td></tr>`;
 
   document.getElementById('canShopee').textContent = BRL(d.canais?.Shopee);
   document.getElementById('canML').textContent = BRL(d.canais?.['Mercado Livre']);
@@ -738,40 +836,14 @@ function render(d){
 
   document.querySelector('#tblFreteUf tbody').innerHTML = (d.frete_uf || []).map(f => `<tr>
     <td>${escapeHtml(f.uf)}</td>
+    <td>${BRL(f.venda)}</td>
     <td>${BRL(f.valor)}</td>
+    <td>${PCT(f.percentual_venda)}</td>
+    <td>${BRL(f.frete_medio)}</td>
     <td>${f.pedidos}</td>
   </tr>`).join('');
 
-    document.querySelector('#tblValidacao tbody').innerHTML = (d.validacao || []).map(v => {
-    const valorPlanilha = v.valor_planilha === null ? 'N/A' : BRL(v.valor_planilha);
-    const fretePlanilha = v.frete_planilha === null ? 'N/A' : BRL(v.frete_planilha);
-    const resultado = v.ok
-      ? '<span class="badge ok">OK</span>'
-      : '<span class="badge err">DIVERGENTE</span>';
-
-    return `<tr>
-      <td>${escapeHtml(v.pedido_id)}</td>
-      <td>${escapeHtml(v.status)}</td>
-      <td>${valorPlanilha}</td>
-      <td>${BRL(v.valor_wbuy)}</td>
-      <td>${BRL(v.diferenca_valor)}</td>
-      <td>${fretePlanilha}</td>
-      <td>${BRL(v.frete_wbuy)}</td>
-      <td>${resultado}</td>
-    </tr>`;
-  }).join('');
-
-  document.querySelector('#tblDevolvidos tbody').innerHTML = (d.devolvidos || []).map(p => `<tr>
-    <td>${escapeHtml(p.pedido_id)}</td>
-    <td>${escapeHtml(p.status)}</td>
-    <td>${escapeHtml(p.canal)}</td>
-    <td>${escapeHtml(p.cliente?.nome || '')}</td>
-    <td>${escapeHtml(p.uf || '')}</td>
-    <td>${BRL(p.valor)}</td>
-    <td>${BRL(p.frete)}</td>
-  </tr>`).join('');
-
-document.querySelector('#tbl tbody').innerHTML = (d.pedidos_validos_ordenados || []).map(p => `<tr>
+  document.querySelector('#tbl tbody').innerHTML = (d.pedidos_validos_ordenados || []).map(p => `<tr>
     <td>${escapeHtml(p.pedido_id)}</td>
     <td>${escapeHtml(p.canal)}</td>
     <td>${escapeHtml(p.status)}</td>
@@ -787,40 +859,31 @@ document.querySelector('#tbl tbody').innerHTML = (d.pedidos_validos_ordenados ||
 function exportarCSV(){
   if(!relatorioAtual) return;
 
-  const rows = relatorioAtual.pedidos || [];
+  const rows = relatorioAtual.pedidos_validos_ordenados || [];
   const header = [
-    'pedido_id','data','canal','status','valido','devolvido','cliente','uf',
-    'valor_wbuy','frete_wbuy','receita_produtos','custo_produtos','lucro_produtos',
-    'valor_planilha','frete_planilha','dif_valor','dif_frete','validacao'
+    'pedido_id','data','canal','status','cliente','uf',
+    'valor_total_com_frete','frete','frete_pct_venda',
+    'receita_produtos_sem_frete','custo_produtos','lucro_produtos'
   ];
-
-  const validacaoPorId = {};
-  for(const v of (relatorioAtual.validacao || [])){
-    validacaoPorId[String(v.pedido_id)] = v;
-  }
 
   const csv = [header.join(';')]
     .concat(rows.map(r => {
-      const v = validacaoPorId[String(r.pedido_id)] || {};
+      const valor = Number(r.valor || 0);
+      const frete = Number(r.frete || 0);
+
       return [
         r.pedido_id,
         r.data,
         r.canal,
         r.status,
-        r.valido,
-        r.devolvido,
         r.cliente?.nome,
         r.uf,
-        r.valor,
-        r.frete,
+        valor,
+        frete,
+        valor ? frete / valor : 0,
         r.receita_produtos,
         r.custo_produtos,
-        r.lucro_produtos,
-        v.valor_planilha ?? '',
-        v.frete_planilha ?? '',
-        v.diferenca_valor ?? '',
-        v.diferenca_frete ?? '',
-        v.ok ? 'OK' : 'DIVERGENTE'
+        r.lucro_produtos
       ].map(v => String(v??'').replace(/;/g,',')).join(';');
     }))
     .join('\n');
@@ -828,10 +891,9 @@ function exportarCSV(){
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'relatorio-dom-fama-validado.csv';
+  a.download = 'relatorio-dom-fama-analitico.csv';
   a.click();
 }
-
 </script>
 </body>
 </html>
