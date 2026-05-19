@@ -28,6 +28,10 @@ table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}th,td{p
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.note{font-size:12px;color:#777;margin-top:7px;line-height:1.45}
 .section-title{margin-top:28px;border-bottom:1px solid #eee;padding-bottom:8px;color:#343a40;font-size:16px;text-transform:uppercase;letter-spacing:.5px}
 .platform-title{color:#495057;font-size:14px;margin-bottom:5px;margin-top:22px;font-weight:bold;border-left:3px solid var(--blue);padding-left:8px}
+.badge{display:inline-block;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:800}
+.badge.ok{background:#e8f5e9;color:#2d7d46;border:1px solid #c8e6c9}
+.badge.err{background:#ffebee;color:var(--red);border:1px solid #ffcdd2}
+.badge.warn{background:#fff8e1;color:#8a5a00;border:1px solid #ffe082}
 @media print{.topbar,header .btn,.no-print,.actions,#configCard,#uploadCard,#progressBox{display:none!important}body{background:#fff}main{max-width:100%;margin:0;padding:0}.card{box-shadow:none;border:1px solid #ccc;page-break-inside:avoid}table{border:1px solid #ccc}tr{page-break-inside:avoid}th,td{border:1px solid #ccc;color:#000;padding:8px}.page-break{page-break-before:always}}
 </style>
 </head>
@@ -111,6 +115,13 @@ table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}th,td{p
       <div class="card kpi"><h4>Margem Produtos</h4><p id="kpiMargem">0%</p></div>
     </div>
 
+    <div class="grid4">
+      <div class="card kpi"><h4>Pedidos devolvidos</h4><p id="kpiDevolvidos">0</p></div>
+      <div class="card kpi"><h4>Valor devolvido</h4><p id="kpiValorDevolvido">R$ 0,00</p></div>
+      <div class="card kpi"><h4>Validação Site x WBuy</h4><p id="kpiValidacao">0/0</p></div>
+      <div class="card kpi"><h4>Diferença encontrada</h4><p id="kpiDivergencia">R$ 0,00</p></div>
+    </div>
+
     <div class="card">
       <h2 style="font-size:18px;color:var(--accent)">Vendas por plataforma / cliente</h2>
       <div id="clientesPorCanal"></div>
@@ -127,6 +138,18 @@ table{width:100%;border-collapse:collapse;font-size:13px;margin-top:12px}th,td{p
       </div>
     </div>
 
+    <div class="card">
+      <h2 style="font-size:18px;color:var(--accent)">Validação Site x WBuy</h2>
+      <p class="note">Compara os valores da planilha enviada com os valores retornados pela WBuy. Divergências aparecem em vermelho.</p>
+      <div style="overflow:auto"><table id="tblValidacao"><thead><tr><th>Pedido</th><th>Status</th><th>Valor Planilha</th><th>Valor WBuy</th><th>Diferença</th><th>Frete Planilha</th><th>Frete WBuy</th><th>Resultado</th></tr></thead><tbody></tbody></table></div>
+    </div>
+
+    <div class="card">
+      <h2 style="font-size:18px;color:var(--accent)">Análise de devolvidos</h2>
+      <p class="note">Pedidos com status devolvido, devolução parcial ou similar ficam separados e não entram nas vendas computadas.</p>
+      <div style="overflow:auto"><table id="tblDevolvidos"><thead><tr><th>Pedido</th><th>Status</th><th>Canal</th><th>Cliente</th><th>UF</th><th>Valor</th><th>Frete</th></tr></thead><tbody></tbody></table></div>
+    </div>
+
     <div class="card page-break">
       <h2 style="font-size:18px;color:var(--accent)">Pedidos computados</h2>
       <div style="overflow:auto"><table id="tbl"><thead><tr><th>Pedido</th><th>Canal</th><th>Status</th><th>Cliente</th><th>UF</th><th>Valor</th><th>Frete</th><th>Custo</th><th>Lucro</th></tr></thead><tbody></tbody></table></div>
@@ -141,6 +164,7 @@ const BATCH_SIZE = 10;
 
 let relatorioAtual = null;
 let pedidosColetados = [];
+let basePlanilhaPorId = {};
 
 const BRL = v => Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const PCT = v => (Number(v||0)*100).toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';
@@ -213,29 +237,50 @@ async function lerPlanilha(){
 
   const ids = [];
   const foraPeriodo = [];
+  basePlanilhaPorId = {};
 
-  const idKeys = ['id','pedido','codigo','código','order_id','numero','número'];
+  const idKeys = ['id','pedido','codigo','código','order_id','numero','número','id pedido','id_pedido'];
   const dataKeys = ['data','data venda','data_venda','created_at','cadastro','dt venda','emissão','emissao','data pedido','data_pedido','data compra','data_compra'];
+  const valorKeys = ['total','valor','valor total','valor_total','total pedido','total_pedido','total comprado','total_comprado'];
+  const freteKeys = ['frete','valor frete','valor_frete','frete pedido','frete_pedido'];
+  const statusKeys = ['status','situação','situacao','status pedido','status_pedido'];
+  const ufKeys = ['uf','estado','estado destino','estado_destino'];
+  const clienteKeys = ['cliente','nome','nome cliente','nome_cliente'];
+
+  function acharKey(obj, keys){
+    return Object.keys(obj).find(k => keys.includes(String(k).toLowerCase().trim()));
+  }
 
   for(const r of rows){
-    const keyId = Object.keys(r).find(k =>
-      idKeys.includes(String(k).toLowerCase().trim())
-    );
-
-    const keyData = Object.keys(r).find(k =>
-      dataKeys.includes(String(k).toLowerCase().trim())
-    );
+    const keyId = acharKey(r, idKeys);
+    const keyData = acharKey(r, dataKeys);
 
     if(!keyId || !r[keyId]) continue;
 
     const id = String(r[keyId]).trim().replace(/\.0$/, '');
 
-    // Se a planilha não tiver coluna de data, NÃO consulta tudo sem avisar.
     if(!keyData || !r[keyData]){
       throw new Error('A planilha precisa ter uma coluna de data para filtrar antes da consulta WBuy.');
     }
 
     const dataPedido = normalizarDataPlanilha(r[keyData]);
+
+    const keyValor = acharKey(r, valorKeys);
+    const keyFrete = acharKey(r, freteKeys);
+    const keyStatus = acharKey(r, statusKeys);
+    const keyUf = acharKey(r, ufKeys);
+    const keyCliente = acharKey(r, clienteKeys);
+
+    basePlanilhaPorId[id] = {
+      pedido_id:id,
+      data:dataPedido ? dataPedido.toISOString().slice(0,10) : '',
+      valor_planilha:keyValor ? moedaParaNumero(r[keyValor]) : null,
+      frete_planilha:keyFrete ? moedaParaNumero(r[keyFrete]) : null,
+      status_planilha:keyStatus ? String(r[keyStatus] || '') : '',
+      uf_planilha:keyUf ? String(r[keyUf] || '') : '',
+      cliente_planilha:keyCliente ? String(r[keyCliente] || '') : '',
+      linha_original:r
+    };
 
     if(!dataPedido){
       foraPeriodo.push(id);
@@ -262,6 +307,25 @@ async function lerPlanilha(){
   );
 
   return unicos;
+}
+
+function moedaParaNumero(v){
+  if(v === null || v === undefined || v === '') return null;
+  if(typeof v === 'number') return v;
+
+  let s = String(v)
+    .replace('R$', '')
+    .replace(/\s/g, '')
+    .trim();
+
+  if(s.includes(',') && s.includes('.')){
+    s = s.replace(/\./g, '').replace(',', '.');
+  }else if(s.includes(',')){
+    s = s.replace(',', '.');
+  }
+
+  const n = Number(s);
+  return Number.isFinite(n) ? n : null;
 }
 
 function normalizarDataPlanilha(valor){
@@ -454,8 +518,87 @@ async function processar(){
   }
 }
 
+function statusVendaValida(status){
+  const s = String(status || '').toLowerCase();
+
+  const validos = [
+    'pagamento efetuado',
+    'em produção',
+    'em producao',
+    'em separação',
+    'em separacao',
+    'em expedição',
+    'em expedicao',
+    'em transporte',
+    'saiu para entrega',
+    'disponível para retirada',
+    'disponivel para retirada',
+    'pedido entregue',
+    'disponível',
+    'disponivel',
+    'fatura gerada',
+    'nota fiscal emitida'
+  ];
+
+  const invalidos = [
+    'aguardando',
+    'pagamento em análise',
+    'pagamento em analise',
+    'cancel',
+    'negado',
+    'em análise',
+    'em analise'
+  ];
+
+  if(ehDevolvido(status)) return false;
+  return validos.some(v => s.includes(v)) && !invalidos.some(v => s.includes(v));
+}
+
+function ehDevolvido(status){
+  const s = String(status || '').toLowerCase();
+  return s.includes('devolvido') || s.includes('devolução') || s.includes('devolucao');
+}
+
+function validarPedidoComPlanilha(p){
+  const base = basePlanilhaPorId[String(p.pedido_id)] || {};
+  const valorPlanilha = base.valor_planilha;
+  const fretePlanilha = base.frete_planilha;
+  const valorWbuy = Number(p.valor || 0);
+  const freteWbuy = Number(p.frete || 0);
+
+  const temValorPlanilha = valorPlanilha !== null && valorPlanilha !== undefined;
+  const temFretePlanilha = fretePlanilha !== null && fretePlanilha !== undefined;
+
+  const difValor = temValorPlanilha ? valorWbuy - Number(valorPlanilha || 0) : 0;
+  const difFrete = temFretePlanilha ? freteWbuy - Number(fretePlanilha || 0) : 0;
+
+  const okValor = !temValorPlanilha || Math.abs(difValor) < 0.02;
+  const okFrete = !temFretePlanilha || Math.abs(difFrete) < 0.02;
+
+  return {
+    pedido_id:p.pedido_id,
+    status:p.status || '',
+    valor_planilha:temValorPlanilha ? Number(valorPlanilha || 0) : null,
+    valor_wbuy:valorWbuy,
+    diferenca_valor:difValor,
+    frete_planilha:temFretePlanilha ? Number(fretePlanilha || 0) : null,
+    frete_wbuy:freteWbuy,
+    diferenca_frete:difFrete,
+    ok:okValor && okFrete,
+    base
+  };
+}
+
 function consolidarRelatorio(pedidos){
-  const validos = pedidos.filter(p => p.valido);
+  // Regra final de segurança no frontend: só entra status que comprova venda paga/concluída.
+  const devolvidos = pedidos.filter(p => ehDevolvido(p.status));
+  const validos = pedidos.filter(p => statusVendaValida(p.status));
+
+  // Força a flag para manter consistência visual/exportação.
+  for(const p of pedidos){
+    p.devolvido = ehDevolvido(p.status);
+    p.valido = statusVendaValida(p.status);
+  }
 
   const canais = {'Shopee':0,'Mercado Livre':0,'Loja':0};
   const clientes = {'Shopee':{},'Mercado Livre':{},'Loja':{}};
@@ -482,12 +625,11 @@ function consolidarRelatorio(pedidos){
     clientes[canal][keyCli].total += Number(p.valor || 0);
     clientes[canal][keyCli].pedidos += 1;
 
-    if(Number(p.frete || 0) > 0){
-      const uf = p.uf || 'N/A';
-      if(!freteUf[uf]) freteUf[uf] = {uf, valor:0, pedidos:0};
-      freteUf[uf].valor += Number(p.frete || 0);
-      freteUf[uf].pedidos += 1;
-    }
+    // Frete por estado: SP: R$ X, RJ: R$ Y, etc.
+    const uf = p.uf || p.cliente?.uf || 'N/A';
+    if(!freteUf[uf]) freteUf[uf] = {uf, valor:0, pedidos:0};
+    freteUf[uf].valor += Number(p.frete || 0);
+    freteUf[uf].pedidos += 1;
 
     for(const item of (p.produtos || [])){
       const nome = item.produto || 'Item indefinido';
@@ -499,6 +641,10 @@ function consolidarRelatorio(pedidos){
       produtos[nome].pedidos += 1;
     }
   }
+
+  const validacao = pedidos.map(validarPedidoComPlanilha);
+  const divergentes = validacao.filter(v => !v.ok);
+  const totalDivergencia = divergentes.reduce((s,v) => s + Math.abs(Number(v.diferenca_valor || 0)) + Math.abs(Number(v.diferenca_frete || 0)), 0);
 
   const total = campo => validos.reduce((s,p)=>s+Number(p[campo]||0),0);
   const faturamento = total('valor');
@@ -516,6 +662,8 @@ function consolidarRelatorio(pedidos){
     gerado_em:new Date().toISOString(),
     qtd_pedidos_totais:pedidos.length,
     qtd_pedidos_validos:validos.length,
+    qtd_devolvidos:devolvidos.length,
+    valor_devolvido:devolvidos.reduce((s,p)=>s+Number(p.valor||0),0),
     faturamento,
     total_geral:faturamento,
     total_produtos:totalProdutos,
@@ -529,6 +677,13 @@ function consolidarRelatorio(pedidos){
     clientes_por_canal,
     produtos:Object.values(produtos).sort((a,b)=>b.qtd-a.qtd),
     frete_uf:Object.values(freteUf).sort((a,b)=>b.valor-a.valor),
+    pedidos_validos_ordenados:[...validos].sort((a,b)=>Number(b.valor||0)-Number(a.valor||0)),
+    devolvidos:[...devolvidos].sort((a,b)=>Number(b.valor||0)-Number(a.valor||0)),
+    validacao:validacao.sort((a,b)=>Math.abs(Number(b.diferenca_valor||0))-Math.abs(Number(a.diferenca_valor||0))),
+    qtd_validacao_ok:validacao.filter(v=>v.ok).length,
+    qtd_validacao_total:validacao.length,
+    qtd_divergentes:divergentes.length,
+    total_divergencia:totalDivergencia,
     pedidos
   };
 }
@@ -546,6 +701,10 @@ function render(d){
   document.getElementById('kpiValidos').textContent = d.qtd_pedidos_validos || 0;
   document.getElementById('kpiTicket').textContent = BRL(d.ticket_medio);
   document.getElementById('kpiMargem').textContent = PCT(d.margem_media);
+  document.getElementById('kpiDevolvidos').textContent = d.qtd_devolvidos || 0;
+  document.getElementById('kpiValorDevolvido').textContent = BRL(d.valor_devolvido || 0);
+  document.getElementById('kpiValidacao').textContent = `${d.qtd_validacao_ok || 0}/${d.qtd_validacao_total || 0}`;
+  document.getElementById('kpiDivergencia').textContent = BRL(d.total_divergencia || 0);
 
   document.getElementById('canShopee').textContent = BRL(d.canais?.Shopee);
   document.getElementById('canML').textContent = BRL(d.canais?.['Mercado Livre']);
@@ -583,7 +742,36 @@ function render(d){
     <td>${f.pedidos}</td>
   </tr>`).join('');
 
-  document.querySelector('#tbl tbody').innerHTML = (d.pedidos || []).filter(p=>p.valido).map(p => `<tr>
+    document.querySelector('#tblValidacao tbody').innerHTML = (d.validacao || []).map(v => {
+    const valorPlanilha = v.valor_planilha === null ? 'N/A' : BRL(v.valor_planilha);
+    const fretePlanilha = v.frete_planilha === null ? 'N/A' : BRL(v.frete_planilha);
+    const resultado = v.ok
+      ? '<span class="badge ok">OK</span>'
+      : '<span class="badge err">DIVERGENTE</span>';
+
+    return `<tr>
+      <td>${escapeHtml(v.pedido_id)}</td>
+      <td>${escapeHtml(v.status)}</td>
+      <td>${valorPlanilha}</td>
+      <td>${BRL(v.valor_wbuy)}</td>
+      <td>${BRL(v.diferenca_valor)}</td>
+      <td>${fretePlanilha}</td>
+      <td>${BRL(v.frete_wbuy)}</td>
+      <td>${resultado}</td>
+    </tr>`;
+  }).join('');
+
+  document.querySelector('#tblDevolvidos tbody').innerHTML = (d.devolvidos || []).map(p => `<tr>
+    <td>${escapeHtml(p.pedido_id)}</td>
+    <td>${escapeHtml(p.status)}</td>
+    <td>${escapeHtml(p.canal)}</td>
+    <td>${escapeHtml(p.cliente?.nome || '')}</td>
+    <td>${escapeHtml(p.uf || '')}</td>
+    <td>${BRL(p.valor)}</td>
+    <td>${BRL(p.frete)}</td>
+  </tr>`).join('');
+
+document.querySelector('#tbl tbody').innerHTML = (d.pedidos_validos_ordenados || []).map(p => `<tr>
     <td>${escapeHtml(p.pedido_id)}</td>
     <td>${escapeHtml(p.canal)}</td>
     <td>${escapeHtml(p.status)}</td>
@@ -600,31 +788,50 @@ function exportarCSV(){
   if(!relatorioAtual) return;
 
   const rows = relatorioAtual.pedidos || [];
-  const header = ['pedido_id','data','canal','status','valido','cliente','uf','valor','frete','receita_produtos','custo_produtos','lucro_produtos'];
+  const header = [
+    'pedido_id','data','canal','status','valido','devolvido','cliente','uf',
+    'valor_wbuy','frete_wbuy','receita_produtos','custo_produtos','lucro_produtos',
+    'valor_planilha','frete_planilha','dif_valor','dif_frete','validacao'
+  ];
+
+  const validacaoPorId = {};
+  for(const v of (relatorioAtual.validacao || [])){
+    validacaoPorId[String(v.pedido_id)] = v;
+  }
 
   const csv = [header.join(';')]
-    .concat(rows.map(r => [
-      r.pedido_id,
-      r.data,
-      r.canal,
-      r.status,
-      r.valido,
-      r.cliente?.nome,
-      r.uf,
-      r.valor,
-      r.frete,
-      r.receita_produtos,
-      r.custo_produtos,
-      r.lucro_produtos
-    ].map(v => String(v??'').replace(/;/g,',')).join(';')))
+    .concat(rows.map(r => {
+      const v = validacaoPorId[String(r.pedido_id)] || {};
+      return [
+        r.pedido_id,
+        r.data,
+        r.canal,
+        r.status,
+        r.valido,
+        r.devolvido,
+        r.cliente?.nome,
+        r.uf,
+        r.valor,
+        r.frete,
+        r.receita_produtos,
+        r.custo_produtos,
+        r.lucro_produtos,
+        v.valor_planilha ?? '',
+        v.frete_planilha ?? '',
+        v.diferenca_valor ?? '',
+        v.diferenca_frete ?? '',
+        v.ok ? 'OK' : 'DIVERGENTE'
+      ].map(v => String(v??'').replace(/;/g,',')).join(';');
+    }))
     .join('\n');
 
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'relatorio-dom-fama.csv';
+  a.download = 'relatorio-dom-fama-validado.csv';
   a.click();
 }
+
 </script>
 </body>
 </html>
